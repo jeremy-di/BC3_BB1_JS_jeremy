@@ -21,7 +21,6 @@ const NewVehicle = () => {
     const [clients, setClients] = useState([]);
     const [csrfToken, setCsrfToken] = useState("");
 
-    // Charger CSRF et liste des clients
     useEffect(() => {
     const fetchData = async () => {
         try {
@@ -42,7 +41,7 @@ const NewVehicle = () => {
     try {
         const payload = { marque, modele, annee, client_id: clientId, token: csrfToken };
         await vehicleService.addVehicle(payload);
-        navigate("/vehicles"); // redirection vers la liste
+        navigate("/vehicles");
     } catch (err) {
         console.log(err);
     }
