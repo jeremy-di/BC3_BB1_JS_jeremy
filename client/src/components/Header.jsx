@@ -8,6 +8,9 @@ const Header = () => {
       <Link to="/auth">
         <button className="login-button">Connexion</button>
       </Link>
+      <Link to="/vehicles">
+        <button className="login-button">Vehicules</button>
+      </Link>
     </header>
   );
 };

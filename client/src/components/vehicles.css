@@ -1,0 +1,43 @@
+.vehicles-container {
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+    width: 80%;
+    margin: auto;
+}
+
+.vehicle-container {
+    width: 100%;
+    margin: auto;
+}
+
+.vehicles {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: white;
+    color: #333;
+
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.vehicle {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: rgb(199, 199, 199);
+    color: #333;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left;
+    font-weight: bold;
+}
+
+.vehicle span {
+    color: #ff7606;
+    font-weight: lighter;
+}
+
+.vehicles:hover {
+    background-color: #ffb006;
+    transition: all .5s;
+}
