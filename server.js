@@ -177,7 +177,6 @@ app.get('/api/clients', (req, _res, next) => {
 // Route d'ajout d'un véhicule
 
 app.post('/api/vehicles', (req, _res, next) => {
-  // Seul un admin à accès à ce rôle
   req.requiredroles = ["admin"];
   next();
 }, verifyTokenAndRole, verifyCSRFToken, (req, res) => {

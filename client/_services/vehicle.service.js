@@ -23,3 +23,4 @@ let deleteVehicle = (id) => {
 export const vehicleService = {
     addVehicle, getAllVehicles, getOneVehicle, updateVehicle, deleteVehicle
 }
+

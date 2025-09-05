@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { vehicleService } from "../../_services/vehicle.service";
 import Axios from "../../_services/caller.service"
 
@@ -11,173 +12,116 @@ const initialForm = {
 
 
 const NewVehicle = () => {
-const [form, setForm] = useState(initialForm);
-  const [clients, setClients] = useState([]);
-  const [csrfToken, setCsrfToken] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [done, setDone] = useState(null);
+    const navigate = useNavigate();
 
-  // Charger CSRF + liste clients (admin uniquement)
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [csrfRes, clientsRes] = await Promise.all([
-          Axios.get("/api/csrf"),
-          Axios.get("/api/clients"), // nécessite cookie JWT admin
-        ]);
+    const [marque, setMarque] = useState("");
+    const [modele, setModele] = useState("");
+    const [annee, setAnnee] = useState("");
+    const [clientId, setClientId] = useState("");
+    const [clients, setClients] = useState([]);
+    const [csrfToken, setCsrfToken] = useState("");
+
+    // Charger CSRF et liste des clients
+    useEffect(() => {
+    const fetchData = async () => {
+        try {
+        const csrfRes = await Axios.get("/api/csrf");
         setCsrfToken(csrfRes.data.token);
-        setClients(clientsRes.data || []);
-      } catch (err) {
-        console.error(err);
-        setError(
-          err.response?.data || "Impossible de charger le CSRF ou la liste des clients."
-        );
-      } finally {
-        setLoading(false);
-      }
+
+        const clientsRes = await Axios.get("/api/clients");
+        setClients(clientsRes.data);
+        } catch (err) {
+        console.log(err);
+        }
     };
-    load();
-  }, []);
+    fetchData();
+    }, []);
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-
-    // petite normalisation de l'année (nombre)
-    if (name === "annee") {
-      const onlyDigits = value.replace(/[^\d]/g, "");
-      setForm((f) => ({ ...f, [name]: onlyDigits }));
-    } else {
-      setForm((f) => ({ ...f, [name]: value }));
-    }
-  };
-
-  const validate = () => {
-    if (!form.marque.trim() || !form.modele.trim()) {
-      return "Marque et Modèle sont requis.";
-    }
-    const year = Number(form.annee);
-    if (!Number.isInteger(year) || year < 1886 || year > 2100) {
-      return "Année invalide (1886–2100).";
-    }
-    if (!form.client_id) {
-      return "Veuillez sélectionner un client.";
-    }
-    return null;
-  };
-
-  const onSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setDone(null);
-
-    const msg = validate();
-    if (msg) {
-      setError(msg);
-      return;
-    }
-
-    setSubmitting(true);
     try {
-      await vehicleService.addVehicle({
-        marque: form.marque.trim(),
-        modele: form.modele.trim(),
-        annee: Number(form.annee),
-        client_id: Number(form.client_id),
-        token: csrfToken, // ⚠️ requis par ton middleware verifyCSRFToken
-      });
-      setDone("Véhicule créé avec succès ✅");
-      setForm(initialForm); // reset
-      // Recharger un nouveau CSRF (optionnel mais sain pour rotations)
-      const csrfRes = await Axios.get("/api/csrf");
-      setCsrfToken(csrfRes.data.token);
+        const payload = { marque, modele, annee, client_id: clientId, token: csrfToken };
+        await vehicleService.addVehicle(payload);
+        navigate("/vehicles"); // redirection vers la liste
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data || "Erreur lors de la création du véhicule.");
-    } finally {
-      setSubmitting(false);
+        console.log(err);
     }
-  };
+    };
 
-  if (loading) return <p>Chargement…</p>;
-  if (error && !submitting && !done) {
-    // Affiche l'erreur initiale de chargement si besoin
-  }
-
-  return (
-    <div style={{ padding: "1rem", maxWidth: 640 }}>
-      <h2>Créer un véhicule</h2>
-
-      {error && (
-        <p style={{ color: "red", marginTop: 8 }}>❌ {String(error)}</p>
-      )}
-      {done && (
-        <p style={{ color: "green", marginTop: 8 }}>{done}</p>
-      )}
-
-      <form onSubmit={onSubmit} style={{ marginTop: 16 }}>
-        <div>
-          <label htmlFor="marque">Marque</label>
-          <input
-            id="marque"
-            name="marque"
-            type="text"
-            value={form.marque}
-            onChange={onChange}
-            required
-          />
+    return (
+    <div>
+        <h1 className="text-4xl text-center mt-5">Ajouter un véhicule</h1>
+        <div className="border border-black rounded w-1/2 m-auto mt-5 p-5">
+        <form className="max-w-sm mx-auto" onSubmit={handleSubmit}>
+            <div className="mb-5">
+            <label htmlFor="marque" className="block mb-2 text-sm font-medium text-gray-900">
+                Marque
+            </label>
+            <input
+                type="text"
+                id="marque"
+                name="marque"
+                onChange={(e) => setMarque(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                required
+            />
+            </div>
+            <div className="mb-5">
+            <label htmlFor="modele" className="block mb-2 text-sm font-medium text-gray-900">
+                Modèle
+            </label>
+            <input
+                type="text"
+                id="modele"
+                name="modele"
+                onChange={(e) => setModele(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                required
+            />
+            </div>
+            <div className="mb-5">
+            <label htmlFor="annee" className="block mb-2 text-sm font-medium text-gray-900">
+                Année
+            </label>
+            <input
+                type="text"
+                id="annee"
+                name="annee"
+                onChange={(e) => setAnnee(e.target.value)}
+                placeholder="2020"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                required
+            />
+            </div>
+            <div className="mb-5">
+            <label htmlFor="client_id" className="block mb-2 text-sm font-medium text-gray-900">
+                Client
+            </label>
+            <select
+                id="client_id"
+                name="client_id"
+                onChange={(e) => setClientId(e.target.value)}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                required
+            >
+                <option value="">— Sélectionner un client —</option>
+                {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                    {c.firstname} {c.lastname} ({c.email})
+                </option>
+                ))}
+            </select>
+            </div>
+            <button
+            type="submit"
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            >
+            Valider
+            </button>
+        </form>
         </div>
-
-        <div>
-          <label htmlFor="modele">Modèle</label>
-          <input
-            id="modele"
-            name="modele"
-            type="text"
-            value={form.modele}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="annee">Année</label>
-          <input
-            id="annee"
-            name="annee"
-            type="text"
-            inputMode="numeric"
-            value={form.annee}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="client_id">Client</label>
-          <select
-            id="client_id"
-            name="client_id"
-            value={form.client_id}
-            onChange={onChange}
-            required
-          >
-            <option value="">— Sélectionner un client —</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.firstname} {c.lastname} — {c.email}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Création…" : "Créer le véhicule"}
-        </button>
-      </form>
     </div>
-  );
+    );
 };
 
 export default NewVehicle;
